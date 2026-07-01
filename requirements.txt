@@ -1,0 +1,6 @@
+wntr>=1.4
+pandas
+matplotlib
+scipy
+neo4j
+python-dotenv
