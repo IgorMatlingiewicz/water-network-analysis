@@ -1,9 +1,3 @@
-"""
-Faza 4: Porownanie i analiza
-Cel: zestawic ranking grafowy (Faza 2) z rankingiem hydraulicznym (Faza 3)
-     i sprawdzic, czy wezly uznane za wazne grafowo sa rowniez wazne hydraulicznie.
-"""
-
 import os
 import pandas as pd
 import matplotlib
@@ -11,31 +5,28 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
+import scipy.stats as stats
 
 katalog_skryptu = os.path.dirname(os.path.abspath(__file__))
 katalog_output  = os.path.join(katalog_skryptu, 'output')
 os.makedirs(katalog_output, exist_ok=True)
 
-sciezka_graf = os.path.join(katalog_skryptu, '..', 'faza 2', 'output', 'ranking_grafowy.csv')
+sciezka_graf = os.path.join(katalog_skryptu, '..', 'faza2', 'output', 'ranking_grafowy.csv')
 sciezka_hyd  = os.path.join(katalog_skryptu, '..', 'faza3',  'output', 'ranking_hydrauliczny.csv')
 
-
-# 4.1 – POLACZENIE RANKINGOW
 print("=" * 60)
 print("4.1 – Polaczenie rankingow grafowego i hydraulicznego")
 print("=" * 60)
 
-# wczytujemy oba rankingi
 df_graf = pd.read_csv(sciezka_graf, dtype={'node_name': str})
 df_hyd  = pd.read_csv(sciezka_hyd,  dtype={'wezel': str})
 
 df_graf = df_graf.rename(columns={'node_name': 'wezel'})
 
-# dodajemy rangi grafowe
+# rangi grafowe
 df_graf = df_graf.reset_index(drop=True)
 df_graf['rank_grafowy'] = df_graf.index + 1
 
-# laczymy obie tabele po nazwie wezla
 df_merged = pd.merge(
     df_hyd[['wezel', 'rank_hydrauliczny', 'spadek_cisnienia_m', 'cisnienie_po_awarii_m', 'liczba_rur_zamknietych']],
     df_graf[['wezel', 'rank_grafowy', 'betweenness_score', 'degree_score', 'status']],
@@ -65,7 +56,6 @@ def etykieta_zgodnosci(row):
 
 df_merged['zgodnosc'] = df_merged.apply(etykieta_zgodnosci, axis=1)
 
-# Posortuj wg rangi hydraulicznej do wyswietlenia i zapisu
 # sorutjemy wedlug rangi hydraulicznej
 df_merged = df_merged.sort_values('rank_hydrauliczny').reset_index(drop=True)
 
@@ -74,11 +64,39 @@ print(f"\nLiczba wezlow grafowo waznych (prog): {n_waznych_graf}")
 print(f"\nRozklad zgodnosci miedzy metodami:")
 print(df_merged['zgodnosc'].value_counts().to_string())
 
+x_val = df_merged['betweenness_score'].values
+y_val = df_merged['spadek_cisnienia_m'].values
+
+pearson_r = np.corrcoef(x_val, y_val)[0,1]
+spearman_rho, _ = stats.spearmanr(x_val, y_val)
+kendall_tau, _ = stats.kendalltau(x_val, y_val)
+
+print("\n" + "-"*40)
+print("WSPÓŁCZYNNIKI KORELACJI:")
+print(f"  - Pearsona (liniowa):  r = {pearson_r:.4f}")
+print(f"  - Spearmana (rangowa): rho = {spearman_rho:.4f}")
+print(f"  - Kendalla (rangowa):  tau = {kendall_tau:.4f}")
+print("-"*40)
+
+# Analiza pokrycia zbiorów Top 5 i Top 20 (Punkt 4)
+print("\nANALIZA POKRYCIA DLA WYBRANYCH PODZBIORÓW:")
+for top_n in [5, 20]:
+    # Sortujemy oryginalne ramki by wyciągnąć rzeczywiste Top N dla obu metod
+    top_graf_nodes = set(df_graf.sort_values('rank_grafowy').head(top_n)['wezel'])
+    top_hyd_nodes = set(df_hyd.sort_values('rank_hydrauliczny').head(top_n)['wezel'])
+    
+    wspolne_wezly = top_graf_nodes.intersection(top_hyd_nodes)
+    procent_pokrycia = (len(wspolne_wezly) / top_n) * 100
+    
+    print(f"  - W zbiorach Top {top_n}: wspólnych jest {len(wspolne_wezly)} węzłów ({procent_pokrycia:.1f}% pokrycia)")
+    if wspolne_wezly:
+        print(f"    Wspólne elementy: {wspolne_wezly}")
+print("-"*40)
+
 print(f"\nTop 15 wg rankingu hydraulicznego:")
 kolumny_podglad = ['rank_hydrauliczny', 'wezel', 'status', 'spadek_cisnienia_m', 'rank_grafowy', 'betweenness_score', 'zgodnosc']
 print(df_merged[kolumny_podglad].head(15).to_string(index=False))
 
-# pelna tabele porownawcza do CSV
 kolumny_csv = [
     'rank_hydrauliczny', 'rank_grafowy', 'wezel',
     'status', 'betweenness_score', 'degree_score',
@@ -86,7 +104,7 @@ kolumny_csv = [
     'liczba_rur_zamknietych', 'zgodnosc'
 ]
 sciezka_wyniki = os.path.join(katalog_output, 'porownanie_rankingow.csv')
-df_merged[kolumny_csv].to_csv(sciezka_wyniki, index=False)
+df_merged[kolumny_csv].to_csv(sciezka_wyniki, index=False, encoding='utf-8-sig')
 print(f"\nZapisano: faza4/output/porownanie_rankingow.csv")
 
 
@@ -158,7 +176,7 @@ print("Zapisano: faza4/output/scatter_centralnosc_vs_cisnienie.png")
 
 
 # wykres 2
-# Bierzemy 20 najwazniejszych hydraulicznie i pokazujemy ich obie rangi
+# 20 najwazniejszych hydraulicznie i pokazujemy ich obie rangi
 top20 = df_merged.sort_values('rank_hydrauliczny').head(20).copy()
 
 fig, ax = plt.subplots(figsize=(12, 7))
@@ -177,11 +195,9 @@ ax.set_xticklabels(
     rotation=45, ha='right', fontsize=9
 )
 
-# Pokoloruj etykiety osi X kolorem kategorii zgodnosci
 for etykieta, (_, row) in zip(ax.get_xticklabels(), top20.iterrows()):
     etykieta.set_color(KOLORY.get(row['zgodnosc'], 'black'))
 
-# Etykiety wartosci na paskach
 for pasek in paski_hyd:
     h = pasek.get_height()
     ax.text(pasek.get_x() + pasek.get_width()/2, h + 0.3,
@@ -191,7 +207,6 @@ for pasek in paski_graf:
     ax.text(pasek.get_x() + pasek.get_width()/2, h + 0.3,
             f'{int(h)}', ha='center', va='bottom', fontsize=7, color='#2c3e50')
 
-# Legenda: rangi (gorny lewy), kategorie zgodnosci (gorny prawy)
 patche_zgodn = [mpatches.Patch(color=k, label=v) for v, k in KOLORY.items()]
 legenda_rangi = ax.legend(fontsize=10, loc='upper left')
 legenda_zgodnosci = ax.legend(handles=patche_zgodn, fontsize=8, loc='upper right',

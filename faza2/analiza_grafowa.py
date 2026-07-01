@@ -9,9 +9,12 @@ sciezka_env = os.path.join(katalog_skryptu, ".env")
 
 load_dotenv(sciezka_env)
 
-URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
-USER = os.getenv("NEO4J_USER", "neo4j")
-PASSWORD = os.getenv("NEO4J_PASSWORD", "Projekt5!")
+URI = os.getenv("NEO4J_URI")
+USER = os.getenv("NEO4J_USER")
+PASSWORD = os.getenv("NEO4J_PASSWORD")
+
+if not all([URI, USER, PASSWORD]):
+    raise ValueError("Błąd: Brak wymaganych zmiennych środowiskowych w pliku .env! Sprawdź konfigurację.")
 
 def wyczysc_baze(tx):
     tx.run("MATCH (n) DETACH DELETE n")
@@ -80,6 +83,8 @@ def oblicz_ranking_gds(driver):
         # Sortowanie węzłów malejąco według centralności pośrednictwa
         df_final = df_final.sort_values(by="betweenness_score", ascending=False).reset_index(drop=True)
         
+        df_final['rank_grafowy'] = df_final.index + 1
+
         scores = df_final['betweenness_score'].values
         max_drop = 0
         split_index = 0
@@ -99,8 +104,8 @@ def oblicz_ranking_gds(driver):
         
         os.makedirs(katalog_output, exist_ok=True)
         sciezka_csv = os.path.join(katalog_output, "ranking_grafowy.csv")
-        df_final.to_csv(sciezka_csv, index=False)
-        
+        df_final.to_csv(sciezka_csv, index=False, encoding="utf-8-sig")
+
         print(f"\nRanking grafowy został zapisany do: {sciezka_csv}")
         print(f"Algorytm wyodrębnił {split_index + 1} węzłów jako krytyczne.")
         print("\nTop 5 najbardziej krytycznych węzłów wg grafu:")
