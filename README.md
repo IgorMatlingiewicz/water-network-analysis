@@ -1,4 +1,4 @@
-# Analiza Krytyczności Węzłów Sieci Wodociągowej Net3 💧
+# Analiza Krytyczności Węzłów Sieci Wodociągowej Net3💧
 
 Celem projektu jest identyfikacja i porównanie kluczowych węzłów w sieci wodociągowej Net3 przy użyciu algorytmów analizy grafów oraz symulacji awarii. Projekt realizowany w zespole dwuosobowym. 
 
@@ -41,16 +41,16 @@ Przed uruchomieniem skryptów upewnij się, że Twoja lokalna baza danych w prog
 ## Output projektu 📤
 Uruchomienie skryptów z poszczególnych faz generuje następujące pliki:
 
-- faza1/output/siec_net3.png - Wygenerowana wizualizacja topologii sieci wodociągowej Net3. 
+- **faza1/output/siec_net3.png** - Wygenerowana wizualizacja topologii sieci wodociągowej Net3. 
 
-- faza2/output/ranking_grafowy.csv – Lista węzłów z obliczonymi metrykami centralności oraz kwalifikacją ważności opartą na algorytmie uskoku.
+- **faza2/output/ranking_grafowy.csv** – Lista węzłów z obliczonymi metrykami centralności oraz kwalifikacją ważności opartą na algorytmie uskoku.
 
-- faza3/output/cisnienie_bazowe.csv - Parametry ciśnienia hydraulicznego w warunkach bezawaryjnej pracy układu.
+- **faza3/output/cisnienie_bazowe.csv** - Parametry ciśnienia hydraulicznego w warunkach bezawaryjnej pracy układu.
 
-- faza3/output/wyniki_awarii.csv - Parametry uzyskane z symulacji awarii, spadek średniego ciśnienia, minimalne ciśnienie chwilowe w dobie, flaga wystąpienia ciśnienia ujemnego, liczba węzłów poniżej progu eksploatacyjnego.
+- **faza3/output/wyniki_awarii.csv** - Parametry uzyskane z symulacji awarii, spadek średniego ciśnienia, minimalne ciśnienie chwilowe w dobie, flaga wystąpienia ciśnienia ujemnego, liczba węzłów poniżej progu eksploatacyjnego.
 
-- faza4/output/porownanie_rankingow.csv – Zestawione pozycje węzłów z obu metod.
+- **faza4/output/porownanie_rankingow.csv** – Zestawione pozycje węzłów z obu metod.
 
-- faza4/output/scatter_centralnosc_vs_cisnienie.png – Wykres ilustrujący korelację i trend między metryką grafową a rzeczywistym spadkiem ciśnienia.
+- **faza4/output/scatter_centralnosc_vs_cisnienie.png** – Wykres ilustrujący korelację i trend między metryką grafową a rzeczywistym spadkiem ciśnienia.
 
-- faza4/output/ranking_porownanie_slupkowy.png – Wykres słupkowy prezentujący Top 20 najbardziej krytycznych węzłów hydraulicznych i zestawiający je z ich pozycją w rankingu grafowym.
+- **faza4/output/ranking_porownanie_slupkowy.png** – Wykres słupkowy prezentujący Top 20 najbardziej krytycznych węzłów hydraulicznych i zestawiający je z ich pozycją w rankingu grafowym.
